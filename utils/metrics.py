@@ -6,10 +6,12 @@ import numpy as np
 from collections import Counter
 from scipy.optimize import linear_sum_assignment as linear_assignment
 
+
 def f1(p_num, p_den, r_num, r_den, beta=1):
     p = 0 if p_den == 0 else p_num / float(p_den)
     r = 0 if r_den == 0 else r_num / float(r_den)
     return 0 if p + r == 0 else (1 + beta * beta) * p * r / (beta * beta * p + r)
+
 
 class CorefEvaluator(object):
     def __init__(self):
@@ -25,16 +27,20 @@ class CorefEvaluator(object):
         return sum(e.get_f1() for e in self.evaluators[:3]) / len(self.evaluators[:3])
 
     def get_recall(self):
-        return sum(e.get_recall() for e in self.evaluators[:3]) / len(self.evaluators[:3])
+        return sum(e.get_recall() for e in self.evaluators[:3]) / len(
+            self.evaluators[:3]
+        )
 
     def get_precision(self):
-        return sum(e.get_precision() for e in self.evaluators[:3]) / len(self.evaluators[:3])
+        return sum(e.get_precision() for e in self.evaluators[:3]) / len(
+            self.evaluators[:3]
+        )
 
     def get_prf(self):
         return self.get_precision(), self.get_recall(), self.get_f1()
 
     def prf_str(self):
-        p,r,f = self.get_prf()
+        p, r, f = self.get_prf()
         return f"{p:.3f}, {r:.3f}, {f:.3f}"
 
     def get_full(self):
@@ -49,6 +55,7 @@ class CorefEvaluator(object):
 
     def get_count(self):
         return self.count
+
 
 class Evaluator(object):
     def __init__(self, metric, beta=1):
@@ -78,7 +85,6 @@ class Evaluator(object):
         self.r_num += i
         self.r_den += rd
 
-
     def get_f1(self):
         return f1(self.p_num, self.p_den, self.r_num, self.r_den, beta=self.beta)
 
@@ -101,6 +107,7 @@ def evaluate_documents(documents, metric, beta=1):
         evaluator.update(document)
     return evaluator.get_precision(), evaluator.get_recall(), evaluator.get_f1()
 
+
 def mentions(mention_to_predicted, mention_to_gold):
     predicted_mention_set = mention_to_predicted.keys()
     gold_mention_set = mention_to_gold.keys()
@@ -109,6 +116,7 @@ def mentions(mention_to_predicted, mention_to_gold):
     r_num = len(gold_mention_set & predicted_mention_set)
     r_denom = len(gold_mention_set)
     return p_num, p_denom, r_num, r_denom
+
 
 def b_cubed(clusters, mention_to_gold):
     num, dem = 0, 0
@@ -168,8 +176,11 @@ def lea(clusters, mention_to_gold):
         all_links = len(c) * (len(c) - 1) / 2.0
         for i, m in enumerate(c):
             if m in mention_to_gold:
-                for m2 in c[i + 1:]:
-                    if m2 in mention_to_gold and mention_to_gold[m] == mention_to_gold[m2]:
+                for m2 in c[i + 1 :]:
+                    if (
+                        m2 in mention_to_gold
+                        and mention_to_gold[m] == mention_to_gold[m2]
+                    ):
                         common_links += 1
 
         num += len(c) * common_links / float(all_links)
@@ -179,14 +190,15 @@ def lea(clusters, mention_to_gold):
 
 
 def em(clusters, gold_clusters):
-  pn, pd = 0, 0
-  for cluster in clusters:
-    if cluster in gold_clusters:
-      pn += 1
-    pd += 1
-  rn, rd = 0, 0
-  for cluster in gold_clusters:
-    if cluster in clusters:
-      rn += 1
-    rd += 1
-  return pn, pd, rn, rd
+    pn, pd = 0, 0
+    for cluster in clusters:
+        if cluster in gold_clusters:
+            pn += 1
+        pd += 1
+    rn, rd = 0, 0
+    for cluster in gold_clusters:
+        if cluster in clusters:
+            rn += 1
+        rd += 1
+    return pn, pd, rn, rd
+
