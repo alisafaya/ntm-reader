@@ -98,70 +98,51 @@ def process_jsonl(jsonline):
     return json.dumps(process_books3(raw_book), ensure_ascii=False)
 
 
-import sys
-import os
-from glob import glob
-
 if __name__ == "__main__":
-    inputdir, outputdir = sys.argv[1:]
-    inputfiles = glob(os.path.join(inputdir, "*.txt"))
-    outputfiles = [
-        os.path.join(outputdir, os.path.basename(inputfile)) for inputfile in inputfiles
-    ]
+    argparser = argparse.ArgumentParser()
 
-    for i, o in zip(inputfiles, outputfiles):
-        print(i, o)
-        with open(i, "r") as f:
-            raw_book = f.read()
-        with open(o, "w") as f:
-            f.write(process_books3(raw_book))
+    argparser.add_argument(
+        "--input-jsonl",
+        type=str,
+        help="Path of the jsonl file containing Books3 book corpus, one book per line.",
+    )
+    argparser.add_argument(
+        "--output-jsonl",
+        type=str,
+        help="Directory to save the output in the same format as the input.",
+    )
+    argparser.add_argument(
+        "--num-workers",
+        type=int,
+        default=8,
+        help="Number of processes for cleaning books",
+    )
+    argparser.add_argument(
+        "--total-books", type=int, default=None, help="Number of books to process"
+    )
+    argparser.add_argument(
+        "--min-length",
+        type=int,
+        default=5000,
+        help="Minimum length (chars) of a book to be considered",
+    )
+    args = argparser.parse_args()
 
+    # Create the pool of workers
+    pool = Pool(args.num_workers)
 
-# if __name__ == "__main__":
-#     argparser = argparse.ArgumentParser()
+    # Process the books
+    skipped_books, total_books = 0, 0
+    with open(args.input_jsonl, "r") as fi, open(args.output_jsonl, "w") as fo:
+        for book in tqdm(
+            pool.imap_unordered(process_books3, fi, chunksize=8), total=args.total_books
+        ):
+            if len(book) > args.min_length:
+                fo.write(book + "\n END OF BOOK \n")
+                total_books += 1
+            else:
+                skipped_books += 1
 
-#     argparser.add_argument(
-#         "--input-jsonl",
-#         type=str,
-#         help="Path of the jsonl file containing Books3 book corpus, one book per line.",
-#     )
-#     argparser.add_argument(
-#         "--output-jsonl",
-#         type=str,
-#         help="Directory to save the output in the same format as the input.",
-#     )
-#     argparser.add_argument(
-#         "--num-workers",
-#         type=int,
-#         default=8,
-#         help="Number of processes for cleaning books",
-#     )
-#     argparser.add_argument(
-#         "--total-books", type=int, default=None, help="Number of books to process"
-#     )
-#     argparser.add_argument(
-#         "--min-length",
-#         type=int,
-#         default=5000,
-#         help="Minimum length (chars) of a book to be considered",
-#     )
-#     args = argparser.parse_args()
-
-#     # Create the pool of workers
-#     pool = Pool(args.num_workers)
-
-#     # Process the books
-#     skipped_books, total_books = 0, 0
-#     with open(args.input_jsonl, "r") as fi, open(args.output_jsonl, "w") as fo:
-#         for book in tqdm(
-#             pool.imap_unordered(process_books3, fi, chunksize=8), total=args.total_books
-#         ):
-#             if len(book) > args.min_length:
-#                 fo.write(book + "\n END OF BOOK \n")
-#                 total_books += 1
-#             else:
-#                 skipped_books += 1
-
-#     print("Skipped {} books".format(skipped_books))
-#     print("Saved {} books".format(total_books))
-#     print("Done!")
+    print("Skipped {} books".format(skipped_books))
+    print("Saved {} books".format(total_books))
+    print("Done!")
