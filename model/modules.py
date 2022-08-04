@@ -498,4 +498,3 @@ if __name__ == "__main__":
     print("=" * 20)
     print(total_loss)
     print("=" * 20)
-

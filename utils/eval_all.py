@@ -271,4 +271,3 @@ if __name__ == "__main__":
         print(
             f"Mean: {100 * np.mean(all_scores) :.4f} with std: {100 * np.std(all_scores):.4f}"
         )
-

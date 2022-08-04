@@ -201,4 +201,3 @@ def em(clusters, gold_clusters):
             rn += 1
         rd += 1
     return pn, pd, rn, rd
-

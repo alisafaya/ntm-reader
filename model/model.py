@@ -148,4 +148,3 @@ if __name__ == "__main__":
     encoded_repr = model.encode(**tokenized)
     print("Testing encoding:", sentence)
     print("Encoded representation shape:", encoded_repr.shape)
-

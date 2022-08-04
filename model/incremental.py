@@ -308,4 +308,3 @@ class Incremental(torch.nn.Module):
         self.threshold = torch.nn.Parameter(
             data=torch.Tensor([threshold]).to(self.device), requires_grad=False
         )
-
